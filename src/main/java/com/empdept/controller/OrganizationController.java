@@ -31,7 +31,7 @@ public class OrganizationController {
     }
 
     // b. Get all departments
-//    @GetMapping("/departments")
+    @GetMapping("/departments")
     public List<Department> getAllDepartments() {
         return service.getAllDepartments();
     }
