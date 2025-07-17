@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:4200")
 public class OrganizationController {
 
     @Autowired
@@ -72,7 +73,6 @@ public class OrganizationController {
     @GetMapping("/employees-per-department")
     public ResponseEntity<byte[]> downloadReport() throws Exception {
         byte[] pdf = reportService.generateEmployeeDepartmentReport();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(ContentDisposition.builder("attachment")
