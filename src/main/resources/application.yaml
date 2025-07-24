@@ -5,5 +5,7 @@ spring:
       - allDepartments
       - employeesByDepartment
       - employee
+      - departments
+      - employees
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=10m
