@@ -3,14 +3,19 @@ package com.empdept.controller;
 import com.empdept.DTO.DepartmentListWrapper;
 import com.empdept.entity.Department;
 import com.empdept.entity.Employee;
+import com.empdept.exception.ResourceNotFoundException;
 import com.empdept.report.ReportService;
 import com.empdept.service.OrganizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.List;
 
@@ -40,17 +45,21 @@ public class OrganizationController {
     // c. Get employees in a department
     @GetMapping("/departments/{deptId}/employees")
     public List<Employee> getEmployeesInDepartment(@PathVariable String deptId) {
+        System.out.println("into gertEmployeesInDepartment");
         return service.getEmployeesByDepartment(deptId);
     }
 
     // d. Add new employee to department
     @PostMapping("/departments/{deptId}/employees")
-    public ResponseEntity<String> addEmployee(@PathVariable String deptId, @RequestBody Employee employee) {
-        boolean added = service.addEmployeeToDepartment(deptId, employee);
-        if (added) {
-            return ResponseEntity.ok("Employee added to department " + deptId);
+    public ResponseEntity<?> addEmployee(@PathVariable String deptId, @RequestBody Employee employee) {
+        try {
+            Employee savedEmployee = service.addEmployeeToDepartment(deptId, employee);
+            return ResponseEntity.ok(savedEmployee);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error adding employee: " + e.getMessage());
         }
-        return ResponseEntity.badRequest().body("Department not found");
     }
 
     @PostMapping("/departments")
@@ -60,13 +69,21 @@ public class OrganizationController {
     }
 
     // delete employee
-    @DeleteMapping("/departments/{deptId}/employees/{empId}")
-    public ResponseEntity<String> deleteEmployee(@PathVariable String deptId, @PathVariable String empId) {
-        boolean removed = service.deleteEmployeeFromDepartment(empId);
-        if (removed) {
-            return ResponseEntity.ok("Employee removed");
+    @DeleteMapping("/departments/employees/{empId}")
+    public ResponseEntity<Map<String, String>> deleteEmployee(@PathVariable String empId) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            if (service.deleteEmployeeFromDepartment(empId)) {
+                response.put("message", "Employee with ID " + empId + " has been deleted successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("error", "Employee with ID " + empId + " not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            response.put("error", "An error occurred while deleting employee: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-        return ResponseEntity.badRequest().body("Employee not found");
     }
 
     // jasper report
